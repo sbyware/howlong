@@ -12,12 +12,9 @@
     });
 
     let value: DateValue | undefined = undefined;
-    let now = new Date();
-    $: inFuture = value && value.toDate(getLocalTimeZone()) > new Date();
+    let now = Date.now();
 
-    setInterval(() => {
-        now = new Date();
-    }, 1000);
+    setInterval(() => now = Date.now(), 1000);
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -27,14 +24,11 @@
             <span class="text-2xl font-medium">
                 how long
                 {#if value}
-                    {inFuture ? "until" : "since"}...
+                    {value && value.toDate(getLocalTimeZone()).getTime() > now ? "until" : "since"}...
+                {:else}
+                    ?
                 {/if}
             </span>
-            <span class="text-xs text-muted-foreground"
-                >it is currently {new DateFormatter("en-US", {
-                    dateStyle: "long",
-                    timeStyle: "long"
-                }).format(now)}</span>
         </div>
         <Popover.Root openFocus>
             <Popover.Trigger asChild let:builder>
@@ -46,7 +40,7 @@
                     )}
                     builders={[builder]}>
                     <CalendarIcon class="aspect-square h-4 w-4 opacity-50" />
-                    {value ? df.format(value.toDate(getLocalTimeZone())) : "select a date"}
+                    {value ? df.format(value.toDate(getLocalTimeZone())) : "select a date and time"}
                 </Button>
             </Popover.Trigger>
             <Popover.Content class="w-auto p-0">
@@ -55,7 +49,7 @@
         </Popover.Root>
 
         {#if value}
-            {@const units = getTimeUnitsMap(value.toDate(getLocalTimeZone()) - now)}
+            {@const units = getTimeUnitsMap(value.toDate(getLocalTimeZone()).getTime() - now)}
             <div class="flex w-full flex-wrap gap-2 rounded-lg">
                 {#each units as [unit, value]}
                     <div
@@ -67,6 +61,12 @@
                     </div>
                 {/each}
             </div>
+        {:else}
+            <span class="text-center text-xs text-muted-foreground"
+                >it is currently {new DateFormatter("en-US", {
+                    dateStyle: "long",
+                    timeStyle: "long"
+                }).format(new Date(now))}</span>
         {/if}
     </div>
 </div>
